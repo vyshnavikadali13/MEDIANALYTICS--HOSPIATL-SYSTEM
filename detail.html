@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{{ patient.name }}{% endblock %}
+{% block content %}
+{% set bmi_cat = patient.bmi|bmi_category %}
+{% set sugar_cat = patient.blood_sugar|sugar_status %}
+
+<div class="page-header">
+  <div>
+    <h1>{{ patient.name }} <span class="muted">#{{ patient.id }}</span></h1>
+    <p class="muted">{{ patient.age }} yrs · {{ patient.gender }} · Admitted {{ patient.admission_date }}</p>
+  </div>
+  <div class="actions">
+    <a class="btn" href="{{ url_for('patients.list_patients') }}">Back to list</a>
+    <a class="btn btn-primary" href="{{ url_for('patients.edit', patient_id=patient.id) }}">Edit</a>
+    <form method="post" action="{{ url_for('patients.delete', patient_id=patient.id) }}" class="delete-form" data-name="{{ patient.name }}">
+      <button type="submit" class="btn btn-danger">Delete</button>
+    </form>
+  </div>
+</div>
+
+<section class="stat-grid">
+  <div class="stat card">
+    <span class="stat-label">BMI</span>
+    <span class="stat-value">{{ patient.bmi }}</span>
+    <span class="badge badge-{{ bmi_cat|lower }}">{{ bmi_cat }}</span>
+  </div>
+  <div class="stat card">
+    <span class="stat-label">Fasting blood sugar</span>
+    <span class="stat-value">{{ patient.blood_sugar }}<small> mg/dL</small></span>
+    <span class="badge badge-{{ sugar_cat|lower }}">{{ sugar_cat }}</span>
+  </div>
+  <div class="stat card">
+    <span class="stat-label">Blood pressure</span>
+    <span class="stat-value">
+      {% if patient.bp_systolic %}{{ patient.bp_systolic }}/{{ patient.bp_diastolic or '–' }}<small> mmHg</small>{% else %}–{% endif %}
+    </span>
+  </div>
+</section>
+
+<div class="detail-grid">
+  <section class="card">
+    <h2>Personal details</h2>
+    <dl class="details">
+      <dt>Phone</dt><dd>{{ patient.phone or '–' }}</dd>
+      <dt>Address</dt><dd>{{ patient.address or '–' }}</dd>
+      <dt>Blood group</dt><dd>{{ patient.blood_group or '–' }}</dd>
+    </dl>
+  </section>
+  <section class="card">
+    <h2>Medical details</h2>
+    <dl class="details">
+      <dt>Disease</dt><dd>{{ patient.disease }}</dd>
+      <dt>Doctor</dt><dd>{{ patient.doctor or '–' }}</dd>
+      <dt>Height</dt><dd>{{ patient.height_cm }} cm</dd>
+      <dt>Weight</dt><dd>{{ patient.weight_kg }} kg</dd>
+      <dt>Notes</dt><dd>{{ patient.notes or '–' }}</dd>
+    </dl>
+  </section>
+</div>
+{% endblock %}

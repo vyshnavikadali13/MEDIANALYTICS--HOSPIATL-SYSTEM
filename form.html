@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Add Patient' if patient_id is none else 'Edit Patient' }}{% endblock %}
+{% block content %}
+{% set editing = patient_id is not none %}
+{% macro value(field) %}{% set v = patient.get(field) %}{{ '' if v is none else v }}{% endmacro %}
+
+<div class="page-header">
+  <div>
+    <h1>{{ 'Edit Patient #%d'|format(patient_id) if editing else 'Register New Patient' }}</h1>
+    <p class="muted">Fields marked * are required. BMI is calculated automatically.</p>
+  </div>
+</div>
+
+<form method="post" id="patient-form" class="card form" novalidate>
+  <fieldset>
+    <legend>Personal details</legend>
+    <div class="form-grid">
+      <div class="field span-2">
+        <label for="name">Full name *</label>
+        <input id="name" name="name" value="{{ value('name') }}" required maxlength="100">
+      </div>
+      <div class="field">
+        <label for="age">Age *</label>
+        <input id="age" name="age" type="number" min="0" max="120" step="1" value="{{ value('age') }}" required>
+      </div>
+      <div class="field">
+        <label for="gender">Gender *</label>
+        <select id="gender" name="gender" required>
+          <option value="">Select…</option>
+          {% for g_option in genders %}
+            <option {{ 'selected' if patient.get('gender') == g_option }}>{{ g_option }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="phone">Phone</label>
+        <input id="phone" name="phone" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" value="{{ value('phone') }}" placeholder="10 digits">
+      </div>
+      <div class="field">
+        <label for="blood_group">Blood group</label>
+        <select id="blood_group" name="blood_group">
+          <option value="">Unknown</option>
+          {% for bg in blood_groups %}
+            <option {{ 'selected' if patient.get('blood_group') == bg }}>{{ bg }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field span-2">
+        <label for="address">Address</label>
+        <input id="address" name="address" value="{{ value('address') }}" maxlength="200">
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Medical details</legend>
+    <div class="form-grid">
+      <div class="field">
+        <label for="height_cm">Height (cm) *</label>
+        <input id="height_cm" name="height_cm" type="number" min="30" max="250" step="0.1" value="{{ value('height_cm') }}" required>
+      </div>
+      <div class="field">
+        <label for="weight_kg">Weight (kg) *</label>
+        <input id="weight_kg" name="weight_kg" type="number" min="1" max="300" step="0.1" value="{{ value('weight_kg') }}" required>
+      </div>
+      <div class="field">
+        <label>BMI (calculated)</label>
+        <output id="bmi-preview" class="bmi-preview">—</output>
+      </div>
+      <div class="field">
+        <label for="blood_sugar">Fasting blood sugar (mg/dL) *</label>
+        <input id="blood_sugar" name="blood_sugar" type="number" min="20" max="600" step="0.1" value="{{ value('blood_sugar') }}" required>
+      </div>
+      <div class="field">
+        <label for="bp_systolic">BP systolic (mmHg)</label>
+        <input id="bp_systolic" name="bp_systolic" type="number" min="50" max="250" step="1" value="{{ value('bp_systolic') }}">
+      </div>
+      <div class="field">
+        <label for="bp_diastolic">BP diastolic (mmHg)</label>
+        <input id="bp_diastolic" name="bp_diastolic" type="number" min="30" max="150" step="1" value="{{ value('bp_diastolic') }}">
+      </div>
+      <div class="field">
+        <label for="disease">Disease / diagnosis *</label>
+        <input id="disease" name="disease" list="disease-list" value="{{ value('disease') }}" required maxlength="100">
+        <datalist id="disease-list">
+          {% for d in diseases %}<option value="{{ d }}">{% endfor %}
+        </datalist>
+      </div>
+      <div class="field">
+        <label for="doctor">Doctor</label>
+        <input id="doctor" name="doctor" value="{{ value('doctor') }}" maxlength="100">
+      </div>
+      <div class="field">
+        <label for="admission_date">Admission date *</label>
+        <input id="admission_date" name="admission_date" type="date" max="{{ today }}" value="{{ value('admission_date') }}" required>
+      </div>
+      <div class="field span-3">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" rows="3" maxlength="1000">{{ value('notes') }}</textarea>
+      </div>
+    </div>
+  </fieldset>
+
+  <div id="form-errors" class="flash flash-error" hidden></div>
+
+  <div class="form-actions">
+    <a class="btn" href="{{ url_for('patients.detail', patient_id=patient_id) if editing else url_for('patients.list_patients') }}">Cancel</a>
+    <button type="submit" class="btn btn-primary">{{ 'Save Changes' if editing else 'Register Patient' }}</button>
+  </div>
+</form>
+{% endblock %}

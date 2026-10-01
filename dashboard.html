@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="muted">Statistics and charts for all registered patients</p>
+  </div>
+  <div class="actions">
+    <a class="btn" href="{{ url_for('reports.export_csv') }}">Export CSV</a>
+    <a class="btn btn-primary" href="{{ url_for('reports.export_pdf') }}">Download PDF Report</a>
+  </div>
+</div>
+
+{% if stats.total == 0 %}
+  <div class="card empty">
+    <p>No patients yet. <a href="{{ url_for('patients.add') }}">Register the first patient</a> to see the analysis.</p>
+  </div>
+{% else %}
+  <section class="stat-grid">
+    <div class="stat card"><span class="stat-label">Total patients</span><span class="stat-value">{{ stats.total }}</span></div>
+    <div class="stat card"><span class="stat-label">Average age</span><span class="stat-value">{{ stats.age.mean }}<small> yrs</small></span></div>
+    <div class="stat card"><span class="stat-label">Average BMI</span><span class="stat-value">{{ stats.bmi.mean }}</span></div>
+    <div class="stat card"><span class="stat-label">Average blood sugar</span><span class="stat-value">{{ stats.sugar.mean }}<small> mg/dL</small></span></div>
+    <div class="stat card"><span class="stat-label">Diabetic patients</span><span class="stat-value">{{ stats.diabetic }}</span></div>
+  </section>
+
+  <section class="chart-grid">
+    {% for key, (title, _) in charts.items() %}
+      <figure class="card chart {{ 'chart-wide' if loop.last }}">
+        <img src="{{ url_for('chart_image', name=key) }}" alt="{{ title }} chart" loading="lazy">
+      </figure>
+    {% endfor %}
+  </section>
+
+  <section class="card">
+    <h2>Statistical summary</h2>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>Measure</th><th class="num">Mean</th><th class="num">Median</th><th class="num">Std. dev.</th><th class="num">Min</th><th class="num">Max</th></tr>
+        </thead>
+        <tbody>
+          {% for label, key in [("Age (years)", "age"), ("BMI (kg/m²)", "bmi"), ("Blood sugar (mg/dL)", "sugar")] %}
+            {% set s = stats[key] %}
+            <tr><td>{{ label }}</td><td class="num">{{ s.mean }}</td><td class="num">{{ s.median }}</td><td class="num">{{ s.std }}</td><td class="num">{{ s.min }}</td><td class="num">{{ s.max }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="breakdown-grid">
+      {% for title, key in [("BMI category", "by_bmi_category"), ("Sugar status", "by_sugar_status"), ("Age group", "by_age_group")] %}
+        <div>
+          <h3>{{ title }}</h3>
+          <table class="table compact">
+            {% for name, count in stats[key].items() %}
+              <tr><td>{{ name }}</td><td class="num">{{ count }}</td></tr>
+            {% endfor %}
+          </table>
+        </div>
+      {% endfor %}
+    </div>
+    {% if stats.bmi_sugar_correlation is not none %}
+      <p class="muted">Correlation between BMI and blood sugar (Pearson r): <strong>{{ stats.bmi_sugar_correlation }}</strong></p>
+    {% endif %}
+  </section>
+{% endif %}
+{% endblock %}

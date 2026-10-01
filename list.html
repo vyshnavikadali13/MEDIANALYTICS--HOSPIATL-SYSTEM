@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Patients{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Patients</h1>
+    <p class="muted">Showing <span id="result-count">{{ patients|length }}</span> patient{{ '' if patients|length == 1 else 's' }}</p>
+  </div>
+  <div class="actions">
+    <a class="btn" href="{{ url_for('reports.export_csv', q=q, gender=gender) }}">Export CSV</a>
+    <a class="btn btn-primary" href="{{ url_for('patients.add') }}">+ Add Patient</a>
+  </div>
+</div>
+
+<form method="get" class="card search-bar">
+  <input id="live-search" name="q" value="{{ q }}" placeholder="Search by name, ID, disease or doctor" aria-label="Search">
+  <select name="gender" aria-label="Gender">
+    <option value="">All genders</option>
+    {% for g_option in genders %}
+      <option {{ 'selected' if gender == g_option }}>{{ g_option }}</option>
+    {% endfor %}
+  </select>
+  <button class="btn btn-primary" type="submit">Search</button>
+  {% if q or gender %}<a class="btn" href="{{ url_for('patients.list_patients') }}">Clear</a>{% endif %}
+</form>
+
+<div class="card table-wrap">
+  {% if patients %}
+  <table class="table" id="patients-table">
+    <thead>
+      <tr>
+        <th>ID</th><th>Name</th><th class="num">Age</th><th>Gender</th><th>Disease</th>
+        <th class="num">BMI</th><th class="num">Sugar</th><th>Admitted</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in patients %}
+      <tr data-search="#{{ p.id }} {{ p.name|lower }} {{ p.disease|lower }} {{ (p.doctor or '')|lower }}">
+        <td class="muted">#{{ p.id }}</td>
+        <td><a href="{{ url_for('patients.detail', patient_id=p.id) }}">{{ p.name }}</a></td>
+        <td class="num">{{ p.age }}</td>
+        <td>{{ p.gender }}</td>
+        <td>{{ p.disease }}</td>
+        <td class="num">{{ p.bmi }}</td>
+        <td class="num">{{ p.blood_sugar }}</td>
+        <td>{{ p.admission_date }}</td>
+        <td class="row-actions">
+          <a href="{{ url_for('patients.edit', patient_id=p.id) }}">Edit</a>
+          <form method="post" action="{{ url_for('patients.delete', patient_id=p.id) }}" class="delete-form" data-name="{{ p.name }}">
+            <button type="submit" class="link-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="empty">No patients match your search.</p>
+  {% endif %}
+</div>
+{% endblock %}
